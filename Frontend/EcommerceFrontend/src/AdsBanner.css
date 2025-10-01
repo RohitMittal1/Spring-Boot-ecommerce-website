@@ -1,0 +1,21 @@
+.ads-container {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 10px 0;
+}
+
+.ad-card img {
+  border-radius: 8px;
+  transition: transform 0.2s;
+}
+
+.ad-card img:hover {
+  transform: scale(1.05);
+}
+
+.ad-card p {
+  text-align: center;
+  font-weight: bold;
+  margin-top: 50px;
+}

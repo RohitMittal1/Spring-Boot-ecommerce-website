@@ -1,0 +1,31 @@
+.dark-theme {
+  --root_background: #1f1f1f;
+}
+
+.light-theme {
+  --root_background: white;
+}
+
+:root {
+  background-color: #1f1f1f;
+  --bg: #0b1220;
+  --fg: #f8fafc;
+  --muted: #e5e7eb;
+  --brand: #0ea5e9;
+  --accent: #22d3ee;
+}
+
+html,
+body,
+#root {
+  background: var(--bg);
+  color: var(--fg);
+}
+@keyframes scrollAds {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
