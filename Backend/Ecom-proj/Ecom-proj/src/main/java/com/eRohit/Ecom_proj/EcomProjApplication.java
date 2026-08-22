@@ -5,8 +5,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
-import com.eRohit.Ecom_proj.client.AdvertisementClient;
-import com.eRohit.Ecom_proj.dto.AdvertisementDTO;
 import com.eRohit.Ecom_proj.model.Product;
 import com.eRohit.Ecom_proj.service.ProductService;
 
@@ -21,13 +19,11 @@ import java.util.Scanner;
 @EnableFeignClients
 public class EcomProjApplication implements CommandLineRunner {
 
-	private final AdvertisementClient advertisementClient;
 	private final ProductService productService;
 	private final Scanner scanner = new Scanner(System.in);
 	private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
-	public EcomProjApplication(AdvertisementClient advertisementClient, ProductService productService) {
-		this.advertisementClient = advertisementClient;
+	public EcomProjApplication(ProductService productService) {
 		this.productService = productService;
 	}
 
@@ -47,8 +43,7 @@ public class EcomProjApplication implements CommandLineRunner {
 
 			switch (choice) {
 				case 1 -> productMenu();
-				case 2 -> advertisementMenu();
-				case 3 -> {
+				case 2 -> {
 					System.out.println("\n🎉 Thank you for using E-Commerce Management System!");
 					System.out.println("👋 Goodbye!");
 					System.exit(0);
@@ -63,8 +58,7 @@ public class EcomProjApplication implements CommandLineRunner {
 		System.out.println("║              MAIN MENU                ║");
 		System.out.println("╠═══════════════════════════════════════╣");
 		System.out.println("║  1. 📦 Product Management             ║");
-		System.out.println("║  2. 📢 Advertisement Management       ║");
-		System.out.println("║  3. 🚪 Exit                           ║");
+		System.out.println("║  2. 🚪 Exit                           ║");
 		System.out.println("╚═══════════════════════════════════════╝");
 	}
 
@@ -107,6 +101,7 @@ public class EcomProjApplication implements CommandLineRunner {
 		try {
 			System.out.println("\n📦 ALL PRODUCTS:");
 			System.out.println("─".repeat(80));
+
 			List<Product> products = productService.getAllProducts();
 
 			if (products.isEmpty()) {
@@ -116,6 +111,7 @@ public class EcomProjApplication implements CommandLineRunner {
 
 			System.out.printf("%-5s %-20s %-30s %-15s %-10s %-15s%n",
 					"ID", "NAME", "DESCRIPTION", "BRAND", "PRICE", "CATEGORY");
+
 			System.out.println("─".repeat(80));
 
 			for (Product product : products) {
@@ -127,6 +123,7 @@ public class EcomProjApplication implements CommandLineRunner {
 						product.getPrice(),
 						truncate(product.getCategory(), 15));
 			}
+
 			System.out.println("─".repeat(80));
 			System.out.println("📊 Total Products: " + products.size());
 
@@ -137,13 +134,16 @@ public class EcomProjApplication implements CommandLineRunner {
 
 	private void showProductById() {
 		int id = getIntInput("🔢 Enter Product ID: ");
+
 		try {
 			Product product = productService.getProductById(id);
+
 			if (product != null) {
 				displayProductDetails(product);
 			} else {
 				System.out.println("❌ Product not found with ID: " + id);
 			}
+
 		} catch (Exception e) {
 			System.out.println("❌ Error fetching product: " + e.getMessage());
 		}
@@ -157,11 +157,14 @@ public class EcomProjApplication implements CommandLineRunner {
 		System.out.println("║ Brand       : " + product.getBrand());
 		System.out.println("║ Price       : ₹" + product.getPrice());
 		System.out.println("║ Category    : " + product.getCategory());
-		System.out.println("║ Release Date: " + (product.getReleaseDate() != null ?
-				dateFormat.format(product.getReleaseDate()) : "N/A"));
-		System.out.println("║ Available   : " + (product.isProductAvailable() ? "✅ Yes" : "❌ No"));
+		System.out.println("║ Release Date: " + (product.getReleaseDate() != null
+				? dateFormat.format(product.getReleaseDate())
+				: "N/A"));
+		System.out.println("║ Available   : "
+				+ (product.isProductAvailable() ? "✅ Yes" : "❌ No"));
 		System.out.println("║ Stock       : " + product.getStockQuantity());
-		System.out.println("║ Image       : " + (product.getImageName() != null ? product.getImageName() : "No Image"));
+		System.out.println("║ Image       : "
+				+ (product.getImageName() != null ? product.getImageName() : "No Image"));
 		System.out.println("╚══════════════════════════════════════════════════╝");
 	}
 
@@ -189,6 +192,7 @@ public class EcomProjApplication implements CommandLineRunner {
 
 			System.out.print("📅 Release Date (yyyy-mm-dd): ");
 			String dateStr = scanner.nextLine();
+
 			if (!dateStr.trim().isEmpty()) {
 				try {
 					Date releaseDate = dateFormat.parse(dateStr);
@@ -202,13 +206,18 @@ public class EcomProjApplication implements CommandLineRunner {
 			}
 
 			System.out.print("✅ Is Available (true/false): ");
-			product.setProductAvailable(Boolean.parseBoolean(scanner.nextLine()));
+			product.setProductAvailable(
+					Boolean.parseBoolean(scanner.nextLine()));
 
 			System.out.print("📦 Stock Quantity: ");
-			product.setStockQuantity(Integer.parseInt(scanner.nextLine()));
+			product.setStockQuantity(
+					Integer.parseInt(scanner.nextLine()));
 
 			Product savedProduct = productService.saveProduct(product, null);
-			System.out.println("🎉 Product added successfully with ID: " + savedProduct.getId());
+
+			System.out.println(
+					"🎉 Product added successfully with ID: "
+							+ savedProduct.getId());
 
 		} catch (Exception e) {
 			System.out.println("❌ Error adding product: " + e.getMessage());
@@ -217,47 +226,85 @@ public class EcomProjApplication implements CommandLineRunner {
 
 	private void updateProduct() {
 		int id = getIntInput("🔢 Enter Product ID to update: ");
+
 		try {
 			Product existingProduct = productService.getProductById(id);
+
 			if (existingProduct == null) {
 				System.out.println("❌ Product not found with ID: " + id);
 				return;
 			}
 
-			System.out.println("\n✏️ UPDATE PRODUCT (Press Enter to keep current value)");
+			System.out.println(
+					"\n✏️ UPDATE PRODUCT (Press Enter to keep current value)");
 			System.out.println("─".repeat(50));
+
 			displayProductDetails(existingProduct);
 
 			Product updatedProduct = new Product();
 			updatedProduct.setId(id);
 
-			System.out.print("📝 New Name [" + existingProduct.getName() + "]: ");
+			System.out.print(
+					"📝 New Name [" + existingProduct.getName() + "]: ");
 			String name = scanner.nextLine();
-			updatedProduct.setName(name.isEmpty() ? existingProduct.getName() : name);
 
-			System.out.print("📄 New Description [" + existingProduct.getDescription() + "]: ");
+			updatedProduct.setName(
+					name.isEmpty() ? existingProduct.getName() : name);
+
+			System.out.print(
+					"📄 New Description ["
+							+ existingProduct.getDescription() + "]: ");
 			String desc = scanner.nextLine();
-			updatedProduct.setDescription(desc.isEmpty() ? existingProduct.getDescription() : desc);
 
-			System.out.print("🏷️ New Brand [" + existingProduct.getBrand() + "]: ");
+			updatedProduct.setDescription(
+					desc.isEmpty() ? existingProduct.getDescription() : desc);
+
+			System.out.print(
+					"🏷️ New Brand [" + existingProduct.getBrand() + "]: ");
 			String brand = scanner.nextLine();
-			updatedProduct.setBrand(brand.isEmpty() ? existingProduct.getBrand() : brand);
 
-			System.out.print("💰 New Price [₹" + existingProduct.getPrice() + "]: ");
+			updatedProduct.setBrand(
+					brand.isEmpty() ? existingProduct.getBrand() : brand);
+
+			System.out.print(
+					"💰 New Price [₹"
+							+ existingProduct.getPrice() + "]: ");
 			String priceStr = scanner.nextLine();
-			updatedProduct.setPrice(priceStr.isEmpty() ? existingProduct.getPrice() : new BigDecimal(priceStr));
 
-			System.out.print("📂 New Category [" + existingProduct.getCategory() + "]: ");
+			updatedProduct.setPrice(
+					priceStr.isEmpty()
+							? existingProduct.getPrice()
+							: new BigDecimal(priceStr));
+
+			System.out.print(
+					"📂 New Category ["
+							+ existingProduct.getCategory() + "]: ");
 			String category = scanner.nextLine();
-			updatedProduct.setCategory(category.isEmpty() ? existingProduct.getCategory() : category);
 
-			System.out.print("✅ New Availability [" + existingProduct.isProductAvailable() + "]: ");
+			updatedProduct.setCategory(
+					category.isEmpty()
+							? existingProduct.getCategory()
+							: category);
+
+			System.out.print(
+					"✅ New Availability ["
+							+ existingProduct.isProductAvailable() + "]: ");
 			String availStr = scanner.nextLine();
-			updatedProduct.setProductAvailable(availStr.isEmpty() ? existingProduct.isProductAvailable() : Boolean.parseBoolean(availStr));
 
-			System.out.print("📦 New Stock [" + existingProduct.getStockQuantity() + "]: ");
+			updatedProduct.setProductAvailable(
+					availStr.isEmpty()
+							? existingProduct.isProductAvailable()
+							: Boolean.parseBoolean(availStr));
+
+			System.out.print(
+					"📦 New Stock ["
+							+ existingProduct.getStockQuantity() + "]: ");
 			String stockStr = scanner.nextLine();
-			updatedProduct.setStockQuantity(stockStr.isEmpty() ? existingProduct.getStockQuantity() : Integer.parseInt(stockStr));
+
+			updatedProduct.setStockQuantity(
+					stockStr.isEmpty()
+							? existingProduct.getStockQuantity()
+							: Integer.parseInt(stockStr));
 
 			// Keep existing values for fields not being updated
 			updatedProduct.setReleaseDate(existingProduct.getReleaseDate());
@@ -265,7 +312,9 @@ public class EcomProjApplication implements CommandLineRunner {
 			updatedProduct.setImageType(existingProduct.getImageType());
 			updatedProduct.setImageData(existingProduct.getImageData());
 
-			Product result = productService.updateProduct(id, updatedProduct, null);
+			Product result =
+					productService.updateProduct(id, updatedProduct, null);
+
 			if (result != null) {
 				System.out.println("🎉 Product updated successfully!");
 				displayProductDetails(result);
@@ -280,20 +329,28 @@ public class EcomProjApplication implements CommandLineRunner {
 
 	private void deleteProduct() {
 		int id = getIntInput("🔢 Enter Product ID to delete: ");
+
 		try {
 			Product product = productService.getProductById(id);
+
 			if (product == null) {
 				System.out.println("❌ Product not found with ID: " + id);
 				return;
 			}
 
 			displayProductDetails(product);
-			System.out.print("\n⚠️ Are you sure you want to delete this product? (yes/no): ");
+
+			System.out.print(
+					"\n⚠️ Are you sure you want to delete this product? (yes/no): ");
+
 			String confirmation = scanner.nextLine();
 
-			if (confirmation.equalsIgnoreCase("yes") || confirmation.equalsIgnoreCase("y")) {
+			if (confirmation.equalsIgnoreCase("yes")
+					|| confirmation.equalsIgnoreCase("y")) {
+
 				productService.deleteProduct(id);
 				System.out.println("🗑️ Product deleted successfully!");
+
 			} else {
 				System.out.println("❌ Deletion cancelled.");
 			}
@@ -313,26 +370,40 @@ public class EcomProjApplication implements CommandLineRunner {
 		}
 
 		try {
-			List<Product> products = productService.searchProducts(keyword);
-			System.out.println("\n🔎 SEARCH RESULTS for '" + keyword + "':");
+			List<Product> products =
+					productService.searchProducts(keyword);
+
+			System.out.println(
+					"\n🔎 SEARCH RESULTS for '" + keyword + "':");
+
 			System.out.println("─".repeat(80));
 
 			if (products.isEmpty()) {
-				System.out.println("📪 No products found matching '" + keyword + "'");
+				System.out.println(
+						"📪 No products found matching '" + keyword + "'");
 				return;
 			}
 
-			System.out.printf("%-5s %-20s %-30s %-15s %-10s%n", "ID", "NAME", "DESCRIPTION", "BRAND", "PRICE");
+			System.out.printf(
+					"%-5s %-20s %-30s %-15s %-10s%n",
+					"ID",
+					"NAME",
+					"DESCRIPTION",
+					"BRAND",
+					"PRICE");
+
 			System.out.println("─".repeat(80));
 
 			for (Product product : products) {
-				System.out.printf("%-5d %-20s %-30s %-15s ₹%-9s%n",
+				System.out.printf(
+						"%-5d %-20s %-30s %-15s ₹%-9s%n",
 						product.getId(),
 						truncate(product.getName(), 20),
 						truncate(product.getDescription(), 30),
 						truncate(product.getBrand(), 15),
 						product.getPrice());
 			}
+
 			System.out.println("─".repeat(80));
 			System.out.println("📊 Found " + products.size() + " products");
 
@@ -341,201 +412,27 @@ public class EcomProjApplication implements CommandLineRunner {
 		}
 	}
 
-	// ═══════════════════ ADVERTISEMENT MANAGEMENT ═══════════════════
-	private void advertisementMenu() {
-		while (true) {
-			showAdvertisementMenu();
-			int choice = getIntInput("Enter your choice: ");
-
-			switch (choice) {
-				case 1 -> showAllAdvertisements();
-				case 2 -> showAdvertisementById();
-				case 3 -> addNewAdvertisement();
-				case 4 -> updateAdvertisement();
-				case 5 -> deleteAdvertisement();
-				case 6 -> {
-					System.out.println("🔙 Returning to main menu...\n");
-					return;
-				}
-				default -> System.out.println("❌ Invalid choice! Please try again.");
-			}
-		}
-	}
-
-	private void showAdvertisementMenu() {
-		System.out.println("\n╔═══════════════════════════════════════╗");
-		System.out.println("║       ADVERTISEMENT MANAGEMENT        ║");
-		System.out.println("╠═══════════════════════════════════════╣");
-		System.out.println("║  1. 📋 Show All Advertisements        ║");
-		System.out.println("║  2. 🔍 Show Advertisement by ID       ║");
-		System.out.println("║  3. ➕ Add New Advertisement          ║");
-		System.out.println("║  4. ✏️  Update Advertisement          ║");
-		System.out.println("║  5. 🗑️  Delete Advertisement          ║");
-		System.out.println("║  6. 🔙 Back to Main Menu              ║");
-		System.out.println("╚═══════════════════════════════════════╝");
-	}
-
-	private void showAllAdvertisements() {
-		try {
-			System.out.println("\n📢 ALL ADVERTISEMENTS:");
-			System.out.println("─".repeat(80));
-			List<AdvertisementDTO> ads = advertisementClient.getAllAds();
-
-			if (ads.isEmpty()) {
-				System.out.println("📪 No advertisements available.");
-				return;
-			}
-
-			System.out.printf("%-5s %-25s %-40s%n", "ID", "TITLE", "IMAGE URL");
-			System.out.println("─".repeat(80));
-
-			for (AdvertisementDTO ad : ads) {
-				System.out.printf("%-5d %-25s %-40s%n",
-						ad.getId(),
-						truncate(ad.getTitle(), 25),
-						truncate(ad.getImageUrl(), 40));
-			}
-			System.out.println("─".repeat(80));
-			System.out.println("📊 Total Advertisements: " + ads.size());
-
-		} catch (Exception e) {
-			System.out.println("❌ Error fetching advertisements: " + e.getMessage());
-		}
-	}
-
-	private void showAdvertisementById() {
-		int id = getIntInput("🔢 Enter Advertisement ID: ");
-		try {
-			AdvertisementDTO ad = advertisementClient.getAdById(id);
-			if (ad != null) {
-				displayAdvertisementDetails(ad);
-			} else {
-				System.out.println("❌ Advertisement not found with ID: " + id);
-			}
-		} catch (Exception e) {
-			System.out.println("❌ Error fetching advertisement: " + e.getMessage());
-		}
-	}
-
-	private void displayAdvertisementDetails(AdvertisementDTO ad) {
-		System.out.println("\n╔═══════════════ ADVERTISEMENT DETAILS ═══════════════╗");
-		System.out.println("║ ID          : " + ad.getId());
-		System.out.println("║ Title       : " + ad.getTitle());
-		System.out.println("║ Description : " + (ad.getDescription() != null ? ad.getDescription() : "N/A"));
-		System.out.println("║ Image URL   : " + (ad.getImageUrl() != null ? ad.getImageUrl() : "N/A"));
-		System.out.println("║ Redirect URL: " + (ad.getRedirectUrl() != null ? ad.getRedirectUrl() : "N/A"));
-		System.out.println("║ Status      : " + (ad.isActive() ? "🟢 Active" : "🔴 Inactive"));
-		System.out.println("╚═════════════════════════════════════════════════════╝");
-	}
-
-	private void addNewAdvertisement() {
-		try {
-			System.out.println("\n➕ ADD NEW ADVERTISEMENT");
-			System.out.println("─".repeat(40));
-
-			AdvertisementDTO ad = new AdvertisementDTO();
-
-			System.out.print("📝 Advertisement Title: ");
-			ad.setTitle(scanner.nextLine());
-
-			System.out.print("📄 Description: ");
-			ad.setDescription(scanner.nextLine());
-
-			System.out.print("🖼️ Image URL: ");
-			ad.setImageUrl(scanner.nextLine());
-
-			System.out.print("🔗 Redirect URL: ");
-			ad.setRedirectUrl(scanner.nextLine());
-
-			System.out.print("✅ Is Active (true/false): ");
-			ad.setActive(Boolean.parseBoolean(scanner.nextLine()));
-
-			AdvertisementDTO savedAd = advertisementClient.createAd(ad);
-			System.out.println("🎉 Advertisement created successfully with ID: " + savedAd.getId());
-			displayAdvertisementDetails(savedAd);
-
-		} catch (Exception e) {
-			System.out.println("❌ Error adding advertisement: " + e.getMessage());
-		}
-	}
-
-	private void updateAdvertisement() {
-		int id = getIntInput("🔢 Enter Advertisement ID to update: ");
-		try {
-			AdvertisementDTO existingAd = advertisementClient.getAdById(id);
-			if (existingAd == null) {
-				System.out.println("❌ Advertisement not found with ID: " + id);
-				return;
-			}
-
-			System.out.println("\n✏️ UPDATE ADVERTISEMENT (Press Enter to keep current value)");
-			System.out.println("─".repeat(50));
-			displayAdvertisementDetails(existingAd);
-
-			AdvertisementDTO updatedAd = new AdvertisementDTO();
-			updatedAd.setId(id);
-
-			System.out.print("📝 New Title [" + existingAd.getTitle() + "]: ");
-			String title = scanner.nextLine();
-			updatedAd.setTitle(title.isEmpty() ? existingAd.getTitle() : title);
-
-			System.out.print("📄 New Description [" + (existingAd.getDescription() != null ? existingAd.getDescription() : "N/A") + "]: ");
-			String desc = scanner.nextLine();
-			updatedAd.setDescription(desc.isEmpty() ? existingAd.getDescription() : desc);
-
-			System.out.print("🖼️ New Image URL [" + (existingAd.getImageUrl() != null ? existingAd.getImageUrl() : "N/A") + "]: ");
-			String imageUrl = scanner.nextLine();
-			updatedAd.setImageUrl(imageUrl.isEmpty() ? existingAd.getImageUrl() : imageUrl);
-
-			System.out.print("🔗 New Redirect URL [" + (existingAd.getRedirectUrl() != null ? existingAd.getRedirectUrl() : "N/A") + "]: ");
-			String redirectUrl = scanner.nextLine();
-			updatedAd.setRedirectUrl(redirectUrl.isEmpty() ? existingAd.getRedirectUrl() : redirectUrl);
-
-			System.out.print("✅ New Active Status [" + existingAd.isActive() + "]: ");
-			String activeStr = scanner.nextLine();
-			updatedAd.setActive(activeStr.isEmpty() ? existingAd.isActive() : Boolean.parseBoolean(activeStr));
-
-			AdvertisementDTO result = advertisementClient.updateAd(id, updatedAd);
-			if (result != null) {
-				System.out.println("🎉 Advertisement updated successfully!");
-				displayAdvertisementDetails(result);
-			} else {
-				System.out.println("❌ Failed to update advertisement.");
-			}
-
-		} catch (Exception e) {
-			System.out.println("❌ Error updating advertisement: " + e.getMessage());
-		}
-
-	}
 	private int getIntInput(String prompt) {
 		while (true) {
 			try {
 				System.out.print(prompt);
 				String input = scanner.nextLine();
 				return Integer.parseInt(input);
+
 			} catch (NumberFormatException e) {
-				System.out.println("❌ Invalid number, please try again.");
+				System.out.println(
+						"❌ Invalid number, please try again.");
 			}
 		}
 	}
 
 	private String truncate(String str, int maxLength) {
-		if (str == null) return "N/A";
-		return str.length() > maxLength ? str.substring(0, maxLength) + "..." : str;
-	}
-	private void deleteAdvertisement() {
-		int id = getIntInput("🗑️ Enter Advertisement ID to delete: ");
-		try {
-			boolean deleted = advertisementClient.deleteAd(id);
-			if (deleted) {
-				System.out.println("✅ Advertisement deleted successfully!");
-			} else {
-				System.out.println("❌ Failed to delete advertisement. ID may not exist.");
-			}
-		} catch (Exception e) {
-			System.out.println("❌ Error deleting advertisement: " + e.getMessage());
+		if (str == null) {
+			return "N/A";
 		}
 
+		return str.length() > maxLength
+				? str.substring(0, maxLength) + "..."
+				: str;
 	}
 }
